@@ -1,4 +1,4 @@
-GOF Fleet Tank Sounding Calculator v8.2.2
+GOF Fleet Tank Sounding Calculator v8.3.0
 
 GitHub Pages / Android / iPhone installable web app (PWA).
 
@@ -21,4 +21,6 @@ This creates installable home-screen apps. It does not create Google Play or App
 Do not open index.html directly from the phone Files app if you want PWA/offline installation.
 
 v8.2.1 fixes: Tank rows display fuel tanks first in number order, followed by fresh-water tanks in number order, then other liquids and void/reference tanks. Sorting keeps original calibration indexes stable for saved readings. Dolphin Satu's trim control now activates from its vessel data and applies the tank-specific correction tables already embedded in the app. Setia Deras and Dolphin Satu show percent-full values calculated from calibrated capacity where their source tables omit percentages.
-v8.2.2: Added Android/iPhone home-screen install metadata and registered the offline service worker. Cache cleanup is limited to this app so it does not delete another GitHub Pages app's cache.
+v8.3.0: Added Android/iPhone home-screen install metadata and registered the offline service worker. Cache cleanup is limited to this app so it does not delete another GitHub Pages app's cache.
+
+Mobile upgrade v8.3.0: Responsive tank cards, fluid filters, entry progress, sticky ROB summary, fixed Calculate button and collapsible controls. Desktop table, calibration data, calculation formulas and existing saved-reading storage keys retained.
