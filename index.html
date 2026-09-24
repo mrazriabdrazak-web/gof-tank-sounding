@@ -11,6 +11,7 @@
 .head{padding:16px}h1{font-size:22px;margin:0 0 5px}.sub{color:var(--muted);font-size:12px}
 .meta{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:10px;margin-top:12px}
 label{font-size:11px;color:var(--muted);display:block;margin-bottom:4px}
+.unitPicker{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.unitBtn{min-height:44px;padding:8px 6px;border:2px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);font-weight:700;font-size:15px;touch-action:manipulation}.unitBtn.active{background:var(--accent);color:#fff;border-color:var(--accent)}.unitSelectHidden{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 input,select,textarea{width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
 textarea{min-height:55px;resize:vertical}
 .bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 16px;border-top:1px solid var(--line)}
@@ -94,7 +95,7 @@ th:first-child,td:first-child{text-align:left}td input{width:95px;text-align:rig
         <div><label>Vessel</label><select id="vessel"></select></div>
         <div><label>Date &amp; Time</label><input id="dt" type="datetime-local"></div>
         <div><label>Report / Reference No.</label><input id="ref" placeholder="Enter reference"></div>
-        <div><label>Sounding Unit</label><select id="unit"><option value="m">metres (m)</option><option value="cm">centimetres (cm)</option><option value="mm">millimetres (mm)</option></select></div>
+        <div><label>Sounding Unit</label><div class="unitPicker" role="group" aria-label="Sounding unit"><button type="button" class="unitBtn" data-unit="mm" onclick="setUnit('mm')">mm</button><button type="button" class="unitBtn" data-unit="cm" onclick="setUnit('cm')">cm</button><button type="button" class="unitBtn" data-unit="m" onclick="setUnit('m')">m</button></div><select id="unit" class="unitSelectHidden" aria-hidden="true"><option value="m">metres (m)</option><option value="cm">centimetres (cm)</option><option value="mm">millimetres (mm)</option></select></div>
         <div><label>BDN Density @15°C (kg/m³)</label><input id="bdnDensity" type="number" step="0.1" min="0" placeholder="e.g. 870 (kg/m³)"></div>
         <div><label>BDN / Fuel Ref.</label><input id="bdnRef" placeholder="BDN number / bunker ref"></div>
         <div><label>BDN Date</label><input id="bdnDate" type="date"></div>
@@ -196,7 +197,7 @@ function updateBdnNotice(){
 function render(){
   const d=current(), unit=document.getElementById('unit');
   unit.value=['m','cm','mm'].includes(d.unit)?d.unit:'m';
-  unit.dataset.prevUnit=unit.value;
+  unit.dataset.prevUnit=unit.value; updateUnitButtons();
   document.getElementById('sourceBox').innerHTML='<b>Source:</b> '+esc(d.source);
   updateBdnNotice();
   const dolphin=vesselEl.value==='Dolphin Satu';
@@ -245,6 +246,8 @@ function trimCorr(t,sound,trim){
   return interp(sound,x1,x2,a,b);
 }
 function fullVolume(t){return Math.max(...t.rows.map(r=>r[1]));}
+function updateUnitButtons(){const u=document.getElementById('unit')?.value||'m';document.querySelectorAll('.unitBtn').forEach(b=>b.classList.toggle('active',b.dataset.unit===u));}
+function setUnit(next){const sel=document.getElementById('unit');if(!sel||!['m','cm','mm'].includes(next))return;if(sel.value===next){updateUnitButtons();return;}sel.value=next;sel.dispatchEvent(new Event('change',{bubbles:true}));updateUnitButtons();}
 function calculateAll(){
   const d=current(), unit=document.getElementById('unit').value, trim=d.trim?parseFloat(document.getElementById('trim')?.value):0;
   const useBdn=!!document.getElementById('useBdnDensity')?.checked;
@@ -346,7 +349,7 @@ function loadReading(index){
   const arr=JSON.parse(localStorage.getItem(key())||'[]'),x=arr[index];if(!x)return;
   document.getElementById('dt').value=x.dt||'';document.getElementById('ref').value=x.ref||'';document.getElementById('remarks').value=x.remarks||'';
   document.getElementById('bdnDensity').value=x.bdnDensity||'';document.getElementById('bdnRef').value=x.bdnRef||'';document.getElementById('bdnDate').value=x.bdnDate||'';document.getElementById('useBdnDensity').checked=!!x.useBdnDensity;
-  document.getElementById('unit').value=x.unit||current().unit; document.getElementById('unit').dataset.prevUnit=document.getElementById('unit').value;
+  document.getElementById('unit').value=x.unit||current().unit; document.getElementById('unit').dataset.prevUnit=document.getElementById('unit').value; updateUnitButtons();
   if(current().trim){ensureTrimInput();}
   x.soundings.forEach((v,i)=>{const el=document.getElementById('s'+i);if(el)el.value=v||'';});updateBdnNotice();calculateAll();
 }
@@ -429,7 +432,7 @@ document.getElementById('unit').addEventListener('change',(e)=>{
     el.step=next==='mm'?'1':next==='cm'?'0.1':'0.001';
     el.placeholder='Enter '+next;
   });
-  e.target.dataset.prevUnit=next;
+  e.target.dataset.prevUnit=next; updateUnitButtons();
 });
 ['bdnDensity','useBdnDensity'].forEach(id=>{
   const el=document.getElementById(id);
