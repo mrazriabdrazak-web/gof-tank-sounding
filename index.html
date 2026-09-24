@@ -3,7 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GOF Fleet Tank Sounding Calculator v8.2.1</title>
+<title>GOF Fleet Tank Sounding Calculator v8.2.2</title>
+<meta name="theme-color" content="#0b5cab">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="GOF Sounding">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-192.png">
 <style>
 :root{--bg:#f4f7fa;--card:#fff;--ink:#16202a;--muted:#64707c;--line:#d8e0e7;--accent:#0b5cab;--ok:#177245;--warn:#a65d00;--bad:#a51d2d}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px Arial,sans-serif;color:var(--ink)}
@@ -89,7 +95,7 @@ th:first-child,td:first-child{text-align:left}td input{width:95px;text-align:rig
 <div class="wrap">
   <div class="card">
     <div class="head">
-      <h1>GOF Fleet Tank Sounding Calculator v8.2.1</h1>
+      <h1>GOF Fleet Tank Sounding Calculator v8.2.2</h1>
       <div class="sub">Single offline calculator for the six GOF fleet vessels. Vessel-specific calibration data are embedded in this file. Source SG is shown for reference. Fuel-oil tonnes can optionally use the current BDN density at 15°C.</div>
       <div class="meta">
         <div><label>Vessel</label><select id="vessel"></select></div>
@@ -458,6 +464,9 @@ document.getElementById('unit').addEventListener('change',(e)=>{
 });
 init();
 updateFleetHistory();
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
 </script>
 </body>
 </html>
