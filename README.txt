@@ -1,4 +1,4 @@
-GOF Fleet Tank Sounding Calculator v8.3.0
+GOF Fleet Tank Sounding Calculator v8.4.0
 
 GitHub Pages / Android / iPhone installable web app (PWA).
 
@@ -24,3 +24,5 @@ v8.2.1 fixes: Tank rows display fuel tanks first in number order, followed by fr
 v8.3.0: Added Android/iPhone home-screen install metadata and registered the offline service worker. Cache cleanup is limited to this app so it does not delete another GitHub Pages app's cache.
 
 Mobile upgrade v8.3.0: Responsive tank cards, fluid filters, entry progress, sticky ROB summary, fixed Calculate button and collapsible controls. Desktop table, calibration data, calculation formulas and existing saved-reading storage keys retained.
+
+Report upgrade v8.4.0: Daily ROB report preview, Print / Save PDF, prepared-by field retained in saved readings, all-tank details, density basis, remarks and incomplete-reading warnings.

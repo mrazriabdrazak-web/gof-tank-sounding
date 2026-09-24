@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GOF Fleet Tank Sounding Calculator v8.3.0</title>
+<title>GOF Fleet Tank Sounding Calculator v8.4.0</title>
 <meta name="theme-color" content="#0b5cab">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -105,13 +105,17 @@ th:first-child,td:first-child{text-align:left}td input{width:95px;text-align:rig
 }
 @media print{.mobileOnly{display:none!important}.mobileDetails>summary{display:none!important}.mobileDetails{display:block!important}.mobileDetails>*:not(summary){display:block!important}.tankTable tr.mobileFiltered{display:table-row!important}}
 
+
+#reportView{display:none;background:#edf3f7;position:fixed;inset:0;z-index:100;overflow:auto;padding:24px;color:#16202a}#reportView.open{display:block}.reportToolbar{max-width:960px;margin:0 auto 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.reportToolbar button{min-height:44px}.reportToolbar span{color:#64707c;font-size:12px}.reportPaper{max-width:960px;margin:auto;background:white;padding:40px;border:1px solid #d8e0e7;box-shadow:0 8px 32px #123d5010}.reportBrand{letter-spacing:.16em;color:#0b5cab;font-size:11px;font-weight:700}.reportPaper h2{font-size:30px;margin:8px 0}.reportSubtitle{color:#64707c;margin-bottom:24px}.reportMeta{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}.reportMeta strong{display:block;font-size:11px;color:#64707c;margin-bottom:5px}.reportMeta div{overflow-wrap:anywhere}.reportWarning{padding:12px;border:1px solid #d3a660;background:#fff9ec;font-size:13px;line-height:1.5;margin:20px 0}.reportTotals{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}.reportTotals div{background:#edf4f8;padding:12px}.reportTotals small{display:block;color:#526779}.reportTotals b{display:block;font-size:20px;margin-top:6px}.reportPaper table{display:table;min-width:0;width:100%;table-layout:fixed;font-size:12px}.reportPaper thead{display:table-header-group}.reportPaper tbody{display:table-row-group}.reportPaper tr{display:table-row;margin:0;padding:0;border:0}.reportPaper th,.reportPaper td{display:table-cell!important;white-space:normal;overflow-wrap:anywhere;padding:9px 6px;font-size:11px;border-bottom:1px solid #d8e0e7;text-align:right!important}.reportPaper th{position:static}.reportPaper td::before{content:none!important}.reportPaper th:first-child,.reportPaper td:first-child{text-align:left!important;width:27%;font-weight:400}.reportPaper th:last-child,.reportPaper td:last-child{text-align:left!important;width:19%}.reportPaper h3{font-size:14px;margin-top:24px}.reportNotes{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6;font-size:12px}.reportFooter{border-top:1px solid #d8e0e7;margin-top:26px;padding-top:12px;color:#64707c;font-size:10px;line-height:1.5}.reportScroll{overflow:auto}
+@media screen and (max-width:700px){#reportView{padding:12px}.reportPaper{padding:20px}.reportPaper h2{font-size:25px}.reportTotals{grid-template-columns:1fr 1fr}.reportTotals b{font-size:17px}.reportPaper table{min-width:640px}.reportMeta{grid-template-columns:1fr 1fr}.reportToolbar{position:sticky;top:0;background:#edf3f7;padding:8px 0;z-index:1}}
+@media print{@page{size:A4 portrait;margin:13mm}body>.wrap,body>.mobileDock{display:none!important}#reportView{display:block!important;position:static!important;overflow:visible!important;padding:0!important;background:white!important}.reportToolbar{display:none!important}.reportPaper{max-width:none;padding:0;border:0;box-shadow:none}.reportScroll{overflow:visible}.reportPaper table{min-width:0!important}.reportPaper tr{break-inside:avoid}.reportPaper thead{display:table-header-group}.reportPaper h3{break-after:avoid}.reportTotals,.reportMeta,.reportWarning{break-inside:avoid}.reportPaper th,.reportPaper td{font-size:9px!important;padding:6px 4px!important}.reportPaper h2{font-size:24px}.reportNotes{font-size:10px}.reportFooter{font-size:9px}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="card">
     <div class="head">
-      <h1>GOF Fleet Tank Sounding Calculator v8.3.0</h1>
+      <h1>GOF Fleet Tank Sounding Calculator v8.4.0</h1>
       <div class="sub">Single offline calculator for the six GOF fleet vessels. Vessel-specific calibration data are embedded in this file. Source SG is shown for reference. Fuel-oil tonnes can optionally use the current BDN density at 15°C.</div>
       <div class="meta">
         <div><label>Vessel</label><select id="vessel"></select></div>
@@ -516,5 +520,29 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
  refresh();
 })();
 </script>
-</body>
+<script>
+(()=>{
+ const printButton=document.querySelector('button[onclick="window.print()"]');printButton.textContent='Preview ROB Report';printButton.removeAttribute('onclick');printButton.onclick=openROBReport;
+ const nameWrap=document.createElement('div');nameWrap.innerHTML='<label for="preparedBy">Prepared by / Chief Engineer</label><input id="preparedBy" type="text" maxlength="120" placeholder="Enter name for this report">';document.getElementById('ref').parentElement.after(nameWrap);
+ const report=document.createElement('section');report.id='reportView';report.setAttribute('role','dialog');report.setAttribute('aria-modal','true');report.setAttribute('aria-label','Daily ROB report preview');report.innerHTML='<div class="reportToolbar"><button type="button" id="closeReport">Back to calculator</button><button type="button" id="printReport" class="primary">Print / Save PDF</button><span>Use your browser’s print options to save or share a PDF.</span></div><article class="reportPaper" id="reportPaper"></article>';document.body.append(report);
+ let returnFocus;
+ const val=id=>document.getElementById(id)?.value||'';
+ const cell=(label,text)=>'<div><strong>'+esc(label)+'</strong>'+esc(text||'Not entered')+'</div>';
+ function buildReport(){
+ calculateAll();const d=current(),unit=val('unit'),useBDN=document.getElementById('useBdnDensity').checked;
+ let missing=0,invalid=0;
+ const rows=displayTankEntries(d).map(({t,i})=>{const status=document.getElementById('st'+i).textContent,raw=val('s'+i);if(t.cat!=='Void'){if(!raw)missing++;else if(status!=='OK')invalid++;}
+ const statusText=!raw?'NOT ENTERED':status;return '<tr><td>'+esc(t.name)+'<br><span style="color:#64707c">'+esc(t.fluid)+'</span></td><td>'+esc(raw||'—')+'</td><td>'+esc(document.getElementById('v'+i).textContent)+'</td><td>'+esc(document.getElementById('ton'+i).textContent)+'</td><td>'+esc(document.getElementById('pct'+i).textContent)+'</td><td>'+esc(statusText)+'</td></tr>'}).join('');
+ const totals=[['Fuel oil','fo'],['Fresh water','fw'],['Other liquids','other'],['Total liquid','total'],['Fuel oil tonnes','fot']].map(([label,id])=>'<div><small>'+label+'</small><b>'+esc(document.getElementById(id).textContent)+'</b></div>').join('');
+ const warnings=missing||invalid?'<div class="reportWarning"><b>INCOMPLETE REPORT — partial totals</b><br>'+missing+' tank(s) without readings; '+invalid+' tank(s) with calculation errors. Totals include only readings accepted by the calculator. Resolve flagged rows before submitting a final ROB.</div>':'<div class="reportWarning"><b>All non-void tanks have valid entries.</b> Review readings and vessel calibration before submitting.</div>';
+ const density=useBDN?'BDN density: '+(val('bdnDensity')||'NOT ENTERED')+' kg/m³ at 15°C':'Source calibration tonnes (BDN override off)';
+ const trim=d.trim?'<h3>Trim correction</h3><div class="reportNotes">Observed trim: '+esc(val('trim'))+' m (negative forward, positive stern). Tank-specific corrections are applied to the observed soundings below.</div><div class="reportScroll"><table><thead><tr><th>Tank</th><th>Correction (m)</th><th>Corrected sounding (m)</th></tr></thead><tbody>'+displayTankEntries(d).map(({t,i})=>'<tr><td>'+esc(t.name)+'</td><td>'+esc(document.getElementById('c'+i).textContent)+'</td><td>'+esc(document.getElementById('z'+i).textContent)+'</td></tr>').join('')+'</tbody></table></div>':'';
+ document.getElementById('reportPaper').innerHTML='<div class="reportBrand">GOF · FLEET OPERATIONS</div><h2>Daily ROB Report</h2><div class="reportSubtitle">'+esc(vesselEl.value)+' · Remaining on board</div><div class="reportMeta">'+cell('Vessel',vesselEl.value)+cell('Reading date & time (local)',val('dt').replace('T',' '))+cell('Report / reference',val('ref'))+cell('Prepared by / Chief Engineer',val('preparedBy'))+'</div>'+warnings+'<div class="reportTotals">'+totals+'</div><h3>Tank readings · observed sounding in '+esc(unit)+'</h3><div class="reportScroll"><table><thead><tr><th>Tank / fluid</th><th>Sounding ('+esc(unit)+')</th><th>Volume (m³)</th><th>Tonnes</th><th>Full</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+trim+'<h3>Fuel density basis</h3><div class="reportNotes">'+esc(density)+'<br>BDN reference: '+esc(val('bdnRef')||'Not entered')+' · BDN date: '+esc(val('bdnDate')||'Not entered')+'</div><h3>Remarks</h3><div class="reportNotes">'+esc(val('remarks')||'None entered')+'</div><div class="reportFooter">Source: '+esc(d.source)+'<br>Blank readings are not zero. Void/reference tanks are excluded from totals. Prepared-by text is not a digital signature.<br>GOF Sounding Calculator v8.4.0 · Generated '+esc(new Date().toLocaleString())+'</div>';
+ }
+ function openROBReport(){returnFocus=document.activeElement;buildReport();report.classList.add('open');document.querySelector('.wrap').inert=true;document.querySelector('.mobileDock').inert=true;document.body.style.overflow='hidden';document.getElementById('closeReport').focus();}
+ function close(){report.classList.remove('open');document.querySelector('.wrap').inert=false;document.querySelector('.mobileDock').inert=false;document.body.style.overflow='';returnFocus?.focus();}
+ document.getElementById('closeReport').onclick=close;document.getElementById('printReport').onclick=()=>window.print();report.addEventListener('keydown',e=>{if(e.key==='Escape')close();if(e.key==='Tab'){const first=document.getElementById('closeReport'),last=document.getElementById('printReport');if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}});window.addEventListener('beforeprint',buildReport);
+ const baseReading=reading;reading=function(){return {...baseReading(),preparedBy:val('preparedBy')}};const baseLoad=loadReading;loadReading=function(index){baseLoad(index);const rec=JSON.parse(localStorage.getItem(key())||'[]')[index];if(rec)document.getElementById('preparedBy').value=rec.preparedBy||'';};vesselEl.addEventListener('change',()=>document.getElementById('preparedBy').value='');
+})();
+</script></body>
 </html>
