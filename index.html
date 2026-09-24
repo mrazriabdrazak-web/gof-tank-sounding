@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GOF Fleet Tank Sounding Calculator v3</title>
+<title>GOF Fleet Tank Sounding Calculator v7</title>
 <style>
 :root{--bg:#f4f7fa;--card:#fff;--ink:#16202a;--muted:#64707c;--line:#d8e0e7;--accent:#0b5cab;--ok:#177245;--warn:#a65d00;--bad:#a51d2d}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px Arial,sans-serif;color:var(--ink)}
@@ -29,6 +29,51 @@ th:first-child,td:first-child{text-align:left}td input{width:95px;text-align:rig
 .foot{padding:12px 16px;color:var(--muted);font-size:11px;line-height:1.5}
 @media(max-width:900px){.meta,.totals{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.meta,.totals{grid-template-columns:1fr}.wrap{padding:8px}}
+@media(max-width:600px){
+  body{font-size:15px}
+  .wrap{padding:6px}
+  .card{border-radius:10px;margin-bottom:8px}
+  .head{padding:12px}
+  h1{font-size:19px;line-height:1.2}
+  .sub{font-size:11px}
+  .meta{grid-template-columns:1fr;gap:8px;margin-top:10px}
+  label{font-size:12px}
+  input,select,textarea{font-size:16px;min-height:44px;padding:10px;border-radius:8px}
+  textarea{min-height:70px}
+  .bar{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:10px}
+  .bar button{min-height:46px;font-size:14px;padding:10px 8px}
+  .bar button.primary{grid-column:1/-1;font-size:16px}
+  .notice{margin:0 10px 8px;padding:9px 10px;font-size:12px}
+  .tablewrap{overflow:visible}
+  table{min-width:0;width:100%;display:block}
+  thead{display:none}
+  tbody{display:block}
+  tbody tr{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;margin:8px;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff}
+  tbody tr td{display:block;border:0;padding:2px 0;white-space:normal;text-align:left!important;font-size:13px;min-width:0}
+  tbody tr td:nth-child(1){grid-column:1/-1;font-weight:700;font-size:15px;padding-bottom:3px}
+  tbody tr td:nth-child(2),tbody tr td:nth-child(3){font-size:11px;color:var(--muted)}
+  tbody tr td:nth-child(4){grid-column:1/-1;padding-top:5px}
+  tbody tr td:nth-child(5),tbody tr td:nth-child(6){display:none}
+  tbody tr td:nth-child(7)::before{content:'Quantity (L)';display:block;color:var(--muted);font-size:10px}
+  tbody tr td:nth-child(8)::before{content:'Quantity (m³)';display:block;color:var(--muted);font-size:10px}
+  tbody tr td:nth-child(9)::before{content:'Tonnes';display:block;color:var(--muted);font-size:10px}
+  tbody tr td:nth-child(10)::before{content:'% Full';display:block;color:var(--muted);font-size:10px}
+  tbody tr td:nth-child(11){grid-column:1/-1;text-align:center!important;font-weight:700;padding-top:5px}
+  tbody tr td:nth-child(11)::before{content:'Status: ';color:var(--muted);font-weight:400}
+  tbody tr td input{width:100%;min-height:48px;font-size:18px;font-weight:600;text-align:center;padding:10px}
+  .totals{position:sticky;bottom:0;z-index:20;grid-template-columns:1fr 1fr;gap:6px;padding:8px;background:rgba(255,255,255,.97);border-top:1px solid var(--line);box-shadow:0 -2px 10px #00000014}
+  .stat{padding:8px;border-radius:8px}
+  .stat label{font-size:10px}
+  .stat b{font-size:14px;line-height:1.2}
+  .stat:nth-child(4){grid-column:1/-1}
+  .history .tablewrap{overflow:auto}
+  .history table{display:table;min-width:620px}
+  .history thead{display:table-header-group}
+  .history tbody{display:table-row-group}
+  .history tr{display:table-row;border:0;margin:0;padding:0}
+  .history td,.history th{display:table-cell;white-space:nowrap;padding:7px}
+  .history td::before{content:none!important}
+}
 @media print{
  body{background:#fff!important;color:#000!important}.wrap{max-width:none!important;margin:0!important;padding:0!important}
  .card{box-shadow:none!important;border:1px solid #999!important;break-inside:avoid}
@@ -43,18 +88,22 @@ th:first-child,td:first-child{text-align:left}td input{width:95px;text-align:rig
 <div class="wrap">
   <div class="card">
     <div class="head">
-      <h1>GOF Fleet Tank Sounding Calculator v3</h1>
-      <div class="sub">Single offline calculator for the six GOF fleet vessels. Vessel-specific calibration data are embedded in this file. Source SG is shown for reference and does not override the approved calibration volume/weight table.</div>
+      <h1>GOF Fleet Tank Sounding Calculator v7</h1>
+      <div class="sub">Single offline calculator for the six GOF fleet vessels. Vessel-specific calibration data are embedded in this file. Source SG is shown for reference. Fuel-oil tonnes can optionally use the current BDN density at 15°C.</div>
       <div class="meta">
         <div><label>Vessel</label><select id="vessel"></select></div>
         <div><label>Date &amp; Time</label><input id="dt" type="datetime-local"></div>
         <div><label>Report / Reference No.</label><input id="ref" placeholder="Enter reference"></div>
-        <div><label>Sounding Unit</label><select id="unit"><option value="m">metres (m)</option><option value="mm">millimetres (mm)</option></select></div>
+        <div><label>Sounding Unit</label><select id="unit"><option value="m">metres (m)</option><option value="cm">centimetres (cm)</option><option value="mm">millimetres (mm)</option></select></div>
+        <div><label>BDN Density @15°C (kg/m³)</label><input id="bdnDensity" type="number" step="0.1" min="0" placeholder="e.g. 870 (kg/m³)"></div>
+        <div><label>BDN / Fuel Ref.</label><input id="bdnRef" placeholder="BDN number / bunker ref"></div>
+        <div><label>BDN Date</label><input id="bdnDate" type="date"></div>
       </div>
       <div style="margin-top:10px"><label>Remarks</label><textarea id="remarks" placeholder="Enter remarks"></textarea></div>
+      <div class="notice" style="margin-top:10px"><label style="display:flex;align-items:center;gap:8px;font-weight:600"><input id="useBdnDensity" type="checkbox" style="width:auto"> Use BDN density for Fuel Oil ROB tonnes</label><div class="sub" style="margin-top:4px">BDN density is the density at 15°C stated on the Bunker Delivery Note. When enabled, fuel-oil tonnes are calculated from the approved calibrated volume × BDN density. Source calibration volume is unchanged.</div></div>
     </div>
     <div class="bar">
-      <button class="primary" onclick="calculateAll()">Calculate All</button>
+      <button class="primary" onclick="calculateAll()">Calculate / Update ROB</button>
       <button onclick="clearAll()">Clear</button>
       <button onclick="saveReading()">Save Reading</button>
       <button onclick="loadLatest()">Load Latest</button>
@@ -69,7 +118,8 @@ th:first-child,td:first-child{text-align:left}td input{width:95px;text-align:rig
       Negative = trim by forward; positive = trim by stern. The calculator applies the supplied correction table before
       using the no-trim/no-heel sounding table. Other vessels use their source conditions without an invented trim correction.
     </div>
-    <div id="sourceBox" class="notice"></div><div class="notice"><b>SG rule:</b> Source SG is taken from the vessel calibration document. It is reference information only; calibrated volume and tonnes are read/interpolated from the approved table. Do not manually alter SG to change ROB.</div>
+    <div id="sourceBox" class="notice"></div><div id="bdnBox" class="notice"><b>Fuel density rule:</b> Source SG comes from the approved tank calibration document. BDN density @15°C is entered from the current bunker delivery note. It affects only Fuel Oil ROB tonnes when the BDN option is enabled; it does not change calibrated volume.</div>
+    <div id="bdnCalcBox" class="notice"><b>BDN calculation:</b> <span id="bdnStatus">BDN mode OFF — source calibration tonnes used.</span></div>
   </div>
 
   <div class="card">
@@ -84,10 +134,10 @@ th:first-child,td:first-child{text-align:left}td input{width:95px;text-align:rig
       </table>
     </div>
     <div class="totals">
-      <div class="stat"><label>Fuel Oil ROB</label><b id="fo">0.000 m³</b></div>
-      <div class="stat"><label>Fresh Water ROB</label><b id="fw">0.000 m³</b></div>
-      <div class="stat"><label>Other Liquids</label><b id="other">0.000 m³</b></div>
-      <div class="stat"><label>Total Liquid</label><b id="total">0.000 m³</b></div>
+      <div class="stat"><label>Fuel Oil ROB</label><b id="fo">0.000 m³ / 0 L</b></div>
+      <div class="stat"><label>Fresh Water ROB</label><b id="fw">0.000 m³ / 0 L</b></div>
+      <div class="stat"><label>Other Liquids</label><b id="other">0.000 m³ / 0 L</b></div>
+      <div class="stat"><label>Total Liquid</label><b id="total">0.000 m³ / 0 L</b></div>
       <div class="stat"><label>Fuel Oil Tonnes</label><b id="fot">0.000 t</b></div>
     </div>
   </div>
@@ -131,13 +181,24 @@ function nowLocal(){const n=new Date();n.setMinutes(n.getMinutes()-n.getTimezone
 function current(){return FLEET[vesselEl.value];}
 function init(){
   Object.keys(FLEET).forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;vesselEl.appendChild(o);});
-  vesselEl.value=Object.keys(FLEET)[0]; document.getElementById('dt').value=nowLocal(); render();
+  vesselEl.value=Object.keys(FLEET)[0]; document.getElementById('dt').value=nowLocal(); document.getElementById('bdnDate').value=nowLocal().slice(0,10); migrateV3History(); render();
+}
+function updateBdnNotice(){
+  const box=document.getElementById('bdnBox');
+  if(!box)return;
+  const use=!!document.getElementById('useBdnDensity')?.checked;
+  const den=parseFloat(document.getElementById('bdnDensity')?.value);
+  const sg=Number.isFinite(den)&&den>0?(den/1000).toFixed(3):'—';
+  box.innerHTML=use
+    ? '<b>BDN density active:</b> '+(Number.isFinite(den)&&den>0?den.toFixed(1)+' kg/m³ @15°C (SG '+sg+')':'enter a valid BDN density @15°C')+' — Fuel Oil tonnes use this density.'
+    : '<b>Fuel density rule:</b> Source SG comes from the approved tank calibration document. BDN density @15°C is entered from the current bunker delivery note. It affects only Fuel Oil ROB tonnes when the BDN option is enabled; it does not change calibrated volume.';
 }
 function render(){
   const d=current(), unit=document.getElementById('unit');
-  unit.value=d.unit==='mm'?'mm':'m';
+  unit.value=['m','cm','mm'].includes(d.unit)?d.unit:'m';
   unit.dataset.prevUnit=unit.value;
   document.getElementById('sourceBox').innerHTML='<b>Source:</b> '+esc(d.source);
+  updateBdnNotice();
   const dolphin=vesselEl.value==='Dolphin Satu';
   document.getElementById('trimBox').classList.toggle('hidden',!dolphin);
   document.getElementById('corrHead').classList.toggle('hidden',!dolphin);
@@ -146,7 +207,7 @@ function render(){
     const voidRow=t.cat==='Void';
     return `<tr class="${voidRow?'voidrow':''}">
       <td>${esc(t.name)}</td><td class="fluid">${esc(t.fluid)}</td><td>${t.sg==null?'—':Number(t.sg).toFixed(3)}</td>
-      <td><input id="s${i}" type="number" step="${unit.value==='mm'?'1':'0.001'}" min="0" inputmode="decimal" placeholder="Enter ${unit.value==='mm'?'mm':'m'}" aria-label="${esc(t.name)} sounding in ${unit.value}"></td>
+      <td><input id="s${i}" type="number" step="${unit.value==='mm'?'1':unit.value==='cm'?'0.1':'0.001'}" min="0" inputmode="decimal" placeholder="Enter ${unit.value}" aria-label="${esc(t.name)} sounding in ${unit.value}"></td>
       <td id="c${i}" class="${dolphin?'':'hidden'}">—</td><td id="z${i}" class="${dolphin?'':'hidden'}">—</td>
       <td id="l${i}">—</td><td id="v${i}">—</td><td id="ton${i}">—</td><td id="pct${i}">—</td>
       <td id="st${i}" class="status">—</td>
@@ -186,6 +247,9 @@ function trimCorr(t,sound,trim){
 function fullVolume(t){return Math.max(...t.rows.map(r=>r[1]));}
 function calculateAll(){
   const d=current(), unit=document.getElementById('unit').value, trim=d.trim?parseFloat(document.getElementById('trim')?.value):0;
+  const useBdn=!!document.getElementById('useBdnDensity')?.checked;
+  const bdnDensity=parseFloat(document.getElementById('bdnDensity')?.value);
+  const bdnValid=Number.isFinite(bdnDensity)&&bdnDensity>0;
   let fo=0,fw=0,other=0,fot=0;
   d.tanks.forEach((t,i)=>{
     const raw=parseFloat(document.getElementById('s'+i).value);
@@ -194,7 +258,7 @@ function calculateAll(){
     document.getElementById('c'+i).textContent='—';document.getElementById('z'+i).textContent='—';
     st.className='status';
     if(!Number.isFinite(raw)){st.textContent='ENTER';st.classList.add('warn');return;}
-    const s=unit==='mm'?raw/1000:raw;
+    const s=unit==='mm'?raw/1000:unit==='cm'?raw/100:raw;
     let corr=0, corrected=s;
     if(d.trim){
       corr=trimCorr(t,s,trim);
@@ -205,28 +269,64 @@ function calculateAll(){
     }
     const r=lookup(t,corrected);
     if(!r){st.textContent='OUT OF RANGE';st.classList.add('bad');return;}
-    const vol=r[1], ton=r[2];
+    const vol=r[1];
+    const sourceTon=r[2];
+    const ton=(t.cat==='FO' && useBdn) ? (bdnValid ? vol*bdnDensity/1000 : null) : sourceTon;
     const pct=(r[3]!=null ? r[3] : 100*vol/fullVolume(t));
     document.getElementById('l'+i).textContent=(vol*1000).toFixed(1);
     document.getElementById('v'+i).textContent=vol.toFixed(3);
-    document.getElementById('ton'+i).textContent=ton.toFixed(3);
+    document.getElementById('ton'+i).textContent=ton===null?'—':ton.toFixed(3);
     document.getElementById('pct'+i).textContent=pct.toFixed(2)+'%';
-    st.textContent=t.cat==='Void'?'REFERENCE':'OK';st.classList.add(t.cat==='Void'?'warn':'ok');
-    if(t.cat==='Void')return;
-    if(t.cat==='FO'){fo+=vol;fot+=ton;} else if(t.cat==='FW')fw+=vol; else other+=vol;
+    if(t.cat==='Void'){st.textContent='REFERENCE';st.classList.add('warn');return;}
+    if(t.cat==='FO' && useBdn && !bdnValid){st.textContent='BDN DENSITY REQUIRED';st.classList.add('bad');return;}
+    st.textContent='OK';st.classList.add('ok');
+    if(t.cat==='FO'){fo+=vol;if(ton!==null)fot+=ton;} else if(t.cat==='FW')fw+=vol; else other+=vol;
   });
-  document.getElementById('fo').textContent=fo.toFixed(3)+' m³';
-  document.getElementById('fw').textContent=fw.toFixed(3)+' m³';
-  document.getElementById('other').textContent=other.toFixed(3)+' m³';
-  document.getElementById('total').textContent=(fo+fw+other).toFixed(3)+' m³';
+  const total=fo+fw+other;
+  document.getElementById('fo').textContent=fo.toFixed(3)+' m³ / '+Math.round(fo*1000).toLocaleString()+' L';
+  document.getElementById('fw').textContent=fw.toFixed(3)+' m³ / '+Math.round(fw*1000).toLocaleString()+' L';
+  document.getElementById('other').textContent=other.toFixed(3)+' m³ / '+Math.round(other*1000).toLocaleString()+' L';
+  document.getElementById('total').textContent=total.toFixed(3)+' m³ / '+Math.round(total*1000).toLocaleString()+' L';
   document.getElementById('fot').textContent=fot.toFixed(3)+' t';
-  return {fo,fw,other,total:fo+fw+other,fot};
+  const bdnBox=document.getElementById('bdnStatus');
+  if(bdnBox){
+    if(useBdn && bdnValid) bdnBox.textContent='BDN mode ACTIVE — Fuel Oil tonnes use '+bdnDensity.toFixed(1)+' kg/m³ ('+(bdnDensity/1000).toFixed(3)+' SG) at 15°C. Fuel Oil volume remains '+fo.toFixed(3)+' m³ / '+Math.round(fo*1000).toLocaleString()+' L.';
+    else if(useBdn && !bdnValid) bdnBox.textContent='BDN mode ON — enter a valid BDN density in kg/m³ to calculate Fuel Oil tonnes.';
+    else bdnBox.textContent='BDN mode OFF — source calibration tonnes used.';
+  }
+  return {fo,fw,other,total,fot};
 }
-function key(){return 'gof_fleet_tank_soundings_v3_'+vesselEl.value.replace(/[^a-z0-9]+/gi,'_');}
+function migrateV3History(){
+  // Migrate previous v5/v4/v3 storage into v7.
+  Object.keys(FLEET).forEach(v=>{
+    const suffix=v.replace(/[^a-z0-9]+/gi,'_');
+    const oldKey='gof_fleet_tank_soundings_v5_'+suffix;
+    const newKey='gof_fleet_tank_soundings_v7_'+suffix;
+    const oldArr=JSON.parse(localStorage.getItem(oldKey)||'null');
+    const newArr=JSON.parse(localStorage.getItem(newKey)||'null');
+    if(Array.isArray(oldArr)&&!Array.isArray(newArr)){
+      localStorage.setItem(newKey,JSON.stringify(oldArr.slice(0,500)));
+    }
+  });
+
+  // v5/v4/v3 migrations retained so existing vessel history is not lost.
+
+  Object.keys(FLEET).forEach(v=>{
+    const suffix=v.replace(/[^a-z0-9]+/gi,'_');
+    const oldKey='gof_fleet_tank_soundings_v3_'+suffix;
+    const newKey='gof_fleet_tank_soundings_v7_'+suffix;
+    const oldArr=JSON.parse(localStorage.getItem(oldKey)||'null');
+    const newArr=JSON.parse(localStorage.getItem(newKey)||'null');
+    if(Array.isArray(oldArr)&&!Array.isArray(newArr)){
+      localStorage.setItem(newKey,JSON.stringify(oldArr.slice(0,500)));
+    }
+  });
+}
+function key(){return 'gof_fleet_tank_soundings_v7_'+vesselEl.value.replace(/[^a-z0-9]+/gi,'_');}
 function allRecords(){
   const out=[];
   Object.keys(FLEET).forEach(v=>{
-    const k='gof_fleet_tank_soundings_v3_'+v.replace(/[^a-z0-9]+/gi,'_');
+    const k='gof_fleet_tank_soundings_v7_'+v.replace(/[^a-z0-9]+/gi,'_');
     const arr=JSON.parse(localStorage.getItem(k)||'[]');
     arr.forEach((x,i)=>out.push({...x,vessel:v,_index:i}));
   });
@@ -234,8 +334,9 @@ function allRecords(){
 }
 function reading(){
   const calc=calculateAll();
-  return {schema:2,dt:document.getElementById('dt').value,ref:document.getElementById('ref').value,remarks:document.getElementById('remarks').value,
-    unit:document.getElementById('unit').value,soundings:current().tanks.map((_,i)=>document.getElementById('s'+i).value),summary:calc};
+  return {schema:7,dt:document.getElementById('dt').value,ref:document.getElementById('ref').value,remarks:document.getElementById('remarks').value,
+    unit:document.getElementById('unit').value,bdnDensity:document.getElementById('bdnDensity').value,bdnRef:document.getElementById('bdnRef').value,bdnDate:document.getElementById('bdnDate').value,useBdnDensity:document.getElementById('useBdnDensity').checked,
+    soundings:current().tanks.map((_,i)=>document.getElementById('s'+i).value),summary:calc};
 }
 function saveReading(){
   const arr=JSON.parse(localStorage.getItem(key())||'[]');arr.unshift(reading());
@@ -244,9 +345,10 @@ function saveReading(){
 function loadReading(index){
   const arr=JSON.parse(localStorage.getItem(key())||'[]'),x=arr[index];if(!x)return;
   document.getElementById('dt').value=x.dt||'';document.getElementById('ref').value=x.ref||'';document.getElementById('remarks').value=x.remarks||'';
+  document.getElementById('bdnDensity').value=x.bdnDensity||'';document.getElementById('bdnRef').value=x.bdnRef||'';document.getElementById('bdnDate').value=x.bdnDate||'';document.getElementById('useBdnDensity').checked=!!x.useBdnDensity;
   document.getElementById('unit').value=x.unit||current().unit; document.getElementById('unit').dataset.prevUnit=document.getElementById('unit').value;
   if(current().trim){ensureTrimInput();}
-  x.soundings.forEach((v,i)=>{const el=document.getElementById('s'+i);if(el)el.value=v||'';});calculateAll();
+  x.soundings.forEach((v,i)=>{const el=document.getElementById('s'+i);if(el)el.value=v||'';});updateBdnNotice();calculateAll();
 }
 function loadLatest(){loadReading(0);}
 function updateHistory(){
@@ -267,17 +369,17 @@ function csvCell(v){
 }
 function exportROBCSV(){
   const rows=allRecords();
-  const header=['Date/Time','Vessel','Reference','Remarks','Unit','FO ROB (m3)','FW ROB (m3)','Other (m3)','Total Liquid (m3)','FO Tonnes','Soundings JSON'];
+  const header=['Date/Time','Vessel','Reference','Remarks','Unit','BDN Date','BDN Ref.','BDN Density @15C (kg/m3)','Use BDN Density','FO ROB (m3)','FW ROB (m3)','Other (m3)','Total Liquid (m3)','FO Tonnes','Soundings JSON'];
   const lines=[header.map(csvCell).join(',')];
   rows.forEach(x=>lines.push([
-    x.dt,x.vessel,x.ref,x.remarks,x.unit,Number(x.summary?.fo??0).toFixed(3),Number(x.summary?.fw??0).toFixed(3),
+    x.dt,x.vessel,x.ref,x.remarks,x.unit,x.bdnDate||'',x.bdnRef||'',x.bdnDensity||'',x.useBdnDensity?'YES':'NO',Number(x.summary?.fo??0).toFixed(3),Number(x.summary?.fw??0).toFixed(3),
     Number(x.summary?.other??0).toFixed(3),Number(x.summary?.total??0).toFixed(3),Number(x.summary?.fot??0).toFixed(3),JSON.stringify(x.soundings||[])
   ].map(csvCell).join(',')));
   downloadBlob(lines.join('\r\n'),'GOF_Fleet_ROB_History.csv','text/csv;charset=utf-8');
 }
 function exportBackup(){
-  const backup={schema:3,created:new Date().toISOString(),app:'GOF Fleet Tank Sounding Calculator v3',records:{}};
-  Object.keys(FLEET).forEach(v=>{const k='gof_fleet_tank_soundings_v3_'+v.replace(/[^a-z0-9]+/gi,'_');backup.records[v]=JSON.parse(localStorage.getItem(k)||'[]');});
+  const backup={schema:3,created:new Date().toISOString(),app:'GOF Fleet Tank Sounding Calculator v7',records:{}};
+  Object.keys(FLEET).forEach(v=>{const k='gof_fleet_tank_soundings_v7_'+v.replace(/[^a-z0-9]+/gi,'_');backup.records[v]=JSON.parse(localStorage.getItem(k)||'[]');});
   downloadBlob(JSON.stringify(backup,null,2),'GOF_Fleet_ROB_Backup.json','application/json;charset=utf-8');
 }
 function importBackup(event){
@@ -288,7 +390,7 @@ function importBackup(event){
       let count=0;
       Object.entries(b.records).forEach(([v,records])=>{
         if(!FLEET[v]||!Array.isArray(records))return;
-        const k='gof_fleet_tank_soundings_v3_'+v.replace(/[^a-z0-9]+/gi,'_');
+        const k='gof_fleet_tank_soundings_v7_'+v.replace(/[^a-z0-9]+/gi,'_');
         const existing=JSON.parse(localStorage.getItem(k)||'[]');
         const merged=[...records,...existing];
         const seen=new Set(),ded=[];
@@ -316,13 +418,27 @@ document.getElementById('unit').addEventListener('change',(e)=>{
   const next=e.target.value;
   const prev=e.target.dataset.prevUnit || current().unit || 'm';
   if(next===prev){return;}
+  const toMetres={m:1,cm:0.01,mm:0.001};
+  const decimals={m:3,cm:1,mm:0};
   document.querySelectorAll('#body input[id^=\"s\"]').forEach(el=>{
     const n=parseFloat(el.value);
-    if(Number.isFinite(n)) el.value=(next==='mm'&&prev==='m')?(n*1000).toFixed(0):(next==='m'&&prev==='mm')?(n/1000).toFixed(3):el.value;
-    el.step=next==='mm'?'1':'0.001';
-    el.placeholder='Enter '+(next==='mm'?'mm':'m');
+    if(Number.isFinite(n)){
+      const metres=n*(toMetres[prev]||1);
+      el.value=(metres/(toMetres[next]||1)).toFixed(decimals[next]);
+    }
+    el.step=next==='mm'?'1':next==='cm'?'0.1':'0.001';
+    el.placeholder='Enter '+next;
   });
   e.target.dataset.prevUnit=next;
+});
+['bdnDensity','useBdnDensity'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el){
+    ['input','change'].forEach(evt=>el.addEventListener(evt,()=>{
+      updateBdnNotice();
+      if(document.querySelector('#body input')) calculateAll();
+    }));
+  }
 });
 init();
 updateFleetHistory();
