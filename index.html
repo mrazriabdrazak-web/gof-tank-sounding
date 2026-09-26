@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GOF Fleet Tank Sounding Calculator v8.4.1</title>
+<title>GOF Fleet Tank Sounding Calculator v8.4.2</title>
 <meta name="theme-color" content="#0b5cab">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -115,7 +115,7 @@ th:first-child,td:first-child{text-align:left}td input{width:95px;text-align:rig
 <div class="wrap">
   <div class="card">
     <div class="head">
-      <h1>GOF Fleet Tank Sounding Calculator v8.4.1</h1>
+      <h1>GOF Fleet Tank Sounding Calculator v8.4.2</h1>
       <div class="sub">Single offline calculator for the six GOF fleet vessels. Vessel-specific calibration data are embedded in this file. Source SG is shown for reference. Fuel-oil tonnes can optionally use the current BDN density at 15°C.</div>
       <div class="meta">
         <div><label>Vessel</label><select id="vessel"></select></div>
@@ -436,4 +436,113 @@ function importBackup(event){
         const existing=JSON.parse(localStorage.getItem(k)||'[]');
         const merged=[...records,...existing];
         const seen=new Set(),ded=[];
-        merged.forEach(x=>{const sig=JSON.stringify([x.dt,x.ref,x.soundings,x.summary]);if(!se[Truncated]
+        merged.forEach(x=>{const sig=JSON.stringify([x.dt,x.ref,x.soundings,x.summary]);if(!seen.has(sig)){seen.add(sig);ded.push(x);}});
+        localStorage.setItem(k,JSON.stringify(ded.slice(0,500)));count+=records.length;
+      });
+      updateHistory();updateFleetHistory();alert('Backup imported. Records processed: '+count+'. Existing records were retained and duplicates were removed.');
+    }catch(e){alert('Import failed: '+e.message);}
+    event.target.value='';
+  };reader.readAsText(file);
+}
+function downloadBlob(content,name,type){
+  const blob=new Blob([content],{type}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function ensureTrimInput(){
+  let existing=document.getElementById('trimField');
+  if(existing)return;
+  const meta=document.querySelector('.meta'),wrap=document.createElement('div');wrap.id='trimField';
+  wrap.innerHTML='<label>Observed Trim (m)</label><input id="trim" type="number" step="0.01" value="0"><div class="sub">− = forward, + = stern</div>';
+  meta.insertBefore(wrap,meta.children[2]);
+}
+function removeTrimInput(){const x=document.getElementById('trimField');if(x)x.remove();}
+vesselEl.addEventListener('change',()=>{removeTrimInput();if(current().trim)ensureTrimInput();render();});
+document.getElementById('unit').addEventListener('change',(e)=>{
+  const next=e.target.value;
+  const prev=e.target.dataset.prevUnit || current().unit || 'm';
+  if(next===prev){return;}
+  const toMetres={m:1,cm:0.01,mm:0.001};
+  const decimals={m:3,cm:1,mm:0};
+  document.querySelectorAll('#body input[id^=\"s\"]').forEach(el=>{
+    const n=parseFloat(el.value);
+    if(Number.isFinite(n)){
+      const metres=n*(toMetres[prev]||1);
+      el.value=(metres/(toMetres[next]||1)).toFixed(decimals[next]);
+    }
+    el.step=next==='mm'?'1':next==='cm'?'0.1':'0.001';
+    el.placeholder='Enter '+next;
+  });
+  e.target.dataset.prevUnit=next; updateUnitButtons();
+});
+['bdnDensity','useBdnDensity'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el){
+    ['input','change'].forEach(evt=>el.addEventListener(evt,()=>{
+      updateBdnNotice();
+      if(document.querySelector('#body input')) calculateAll();
+    }));
+  }
+});
+init();
+updateFleetHistory();
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+</script>
+<script>
+// Mobile presentation only. Original inputs, datasets and calculation functions are retained.
+(()=>{
+ const mq=matchMedia('(max-width:700px)'), table=document.getElementById('body').closest('table');table.classList.add('tankTable');
+ const summary=document.createElement('div');summary.className='mobileOnly mobileSummary';summary.innerHTML='<small id="mobileSummaryLabel">FUEL OIL ROB</small><strong id="mobileROB"></strong><span id="mobileDensity"></span>';document.querySelector('.wrap').prepend(summary);
+ const tabs=document.createElement('div');tabs.className='mobileOnly mobileTabs';tabs.setAttribute('role','group');tabs.setAttribute('aria-label','Tank fluid filter');tabs.innerHTML=['Fuel','Fresh water','Other'].map((x,i)=>'<button type="button" data-group="'+['FO','FW','Other'][i]+'" aria-pressed="'+(i===0)+'">'+x+'</button>').join('');table.parentElement.before(tabs);
+ const progress=document.createElement('div');progress.className='mobileOnly mobileProgress';progress.setAttribute('aria-live','polite');tabs.after(progress);let group='FO';
+ const dock=document.createElement('div');dock.className='mobileOnly mobileDock';dock.innerHTML='<button type="button" class="primary">Calculate ROB</button>';document.body.append(dock);dock.firstChild.onclick=()=>{calculateAll();refresh();};
+ function details(title,parent,nodes){const d=document.createElement('details');d.className='mobileDetails';const s=document.createElement('summary');s.textContent=title;d.append(s);parent.append(d);nodes.forEach(n=>d.append(n));return d;}
+ const meta=document.querySelector('.meta'), head=document.querySelector('.head');
+ const extraIds=['ref','bdnDensity','bdnRef','bdnDate','remarks'];const extra=document.createElement('div');extra.className='meta';extraIds.forEach(id=>extra.append(document.getElementById(id).parentElement));
+ const bdnNotice=document.getElementById('useBdnDensity').closest('.notice');details('BDN, reference & remarks',head,[extra,bdnNotice,document.getElementById('bdnBox'),document.getElementById('bdnCalcBox'),document.getElementById('sourceBox')]);
+ const bar=document.querySelector('.bar');details('Save, export & backup',head,[bar]);
+ document.querySelectorAll('.history').forEach(card=>{const children=[...card.children];details(card.querySelector('b')?.textContent||'Saved readings',card,children);});
+ document.querySelectorAll('label').forEach(l=>{const input=l.parentElement.querySelector('input,select,textarea');if(input?.id&&!l.contains(input))l.htmlFor=input.id;});
+ function panels(){document.querySelectorAll('.mobileDetails').forEach(d=>d.open=!mq.matches);}panels();mq.addEventListener('change',panels);
+ const labels=['','','Source SG','Observed sounding','Trim correction (m)','Corrected sounding (m)','Quantity (L)','Quantity (m³)','Tonnes','Full','Status'];
+ function refresh(){let entered=0,total=0;const unit=document.getElementById('unit').value;
+ [...document.getElementById('body').rows].forEach(row=>{const input=row.querySelector('input');if(!input)return;const i=Number(input.id.slice(1)),tank=current().tanks[i];const cat=['FO','FW'].includes(tank.cat)?tank.cat:'Other';row.classList.toggle('mobileFiltered',cat!==group);[...row.cells].forEach((cell,j)=>{if(labels[j])cell.dataset.label=j===3?'Observed sounding ('+unit+')':labels[j];});input.setAttribute('aria-label',tank.name+' sounding in '+unit);if(cat===group){total++;if(input.value.trim()!=='')entered++;}});
+ progress.textContent=entered+' of '+total+' tanks entered'+(total===0?' — no tanks in this group':'');
+ document.getElementById('mobileSummaryLabel').textContent=group==='FO'?'FUEL OIL ROB':group==='FW'?'FRESH WATER ROB':'OTHER LIQUIDS';document.getElementById('mobileROB').textContent=document.getElementById(group==='FO'?'fo':group==='FW'?'fw':'other').textContent;
+ document.getElementById('mobileDensity').textContent=document.getElementById('useBdnDensity').checked?'Fuel tonnes: BDN density · '+(document.getElementById('bdnDensity').value||'density required')+' kg/m³':'Fuel tonnes: source calibration';
+ }
+ tabs.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;group=b.dataset.group;tabs.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));refresh();});
+ document.getElementById('body').addEventListener('input',()=>{calculateAll();refresh();});
+ vesselEl.addEventListener('change',()=>{calculateAll();refresh();});document.getElementById('unit').addEventListener('change',()=>{calculateAll();refresh();});
+ document.addEventListener('input',e=>{if(e.target.id==='trim'){calculateAll();refresh();}});
+ new MutationObserver(refresh).observe(document.querySelector('.totals'),{subtree:true,childList:true,characterData:true});
+ window.addEventListener('beforeprint',()=>document.querySelectorAll('.mobileDetails').forEach(d=>{d.dataset.wasOpen=d.open;d.open=true;}));window.addEventListener('afterprint',()=>document.querySelectorAll('.mobileDetails').forEach(d=>d.open=d.dataset.wasOpen==='true'));
+ refresh();
+})();
+</script>
+<script>
+(()=>{
+ const printButton=document.querySelector('button[onclick="window.print()"]');printButton.textContent='Preview ROB Report';printButton.removeAttribute('onclick');printButton.onclick=openROBReport;
+ const nameWrap=document.createElement('div');nameWrap.innerHTML='<label for="preparedBy">Prepared by / Chief Engineer</label><input id="preparedBy" type="text" maxlength="120" placeholder="Enter name for this report">';document.getElementById('ref').parentElement.after(nameWrap);
+ const report=document.createElement('section');report.id='reportView';report.setAttribute('role','dialog');report.setAttribute('aria-modal','true');report.setAttribute('aria-label','Daily ROB report preview');report.innerHTML='<div class="reportToolbar"><button type="button" id="closeReport">Back to calculator</button><button type="button" id="printReport" class="primary">Print / Save PDF</button><span>Use your browser’s print options to save or share a PDF.</span></div><article class="reportPaper" id="reportPaper"></article>';document.body.append(report);
+ let returnFocus;
+ const val=id=>document.getElementById(id)?.value||'';
+ const cell=(label,text)=>'<div><strong>'+esc(label)+'</strong>'+esc(text||'Not entered')+'</div>';
+ function buildReport(){
+ calculateAll();const d=current(),unit=val('unit'),useBDN=document.getElementById('useBdnDensity').checked;
+ let missing=0,invalid=0;
+ const rows=displayTankEntries(d).map(({t,i})=>{const status=document.getElementById('st'+i).textContent,raw=val('s'+i);if(t.cat!=='Void'){if(!raw)missing++;else if(status!=='OK')invalid++;}
+ const statusText=!raw?'NOT ENTERED':status;return '<tr><td>'+esc(t.name)+'<br><span style="color:#64707c">'+esc(t.fluid)+'</span></td><td>'+esc(raw||'—')+'</td><td>'+esc(document.getElementById('v'+i).textContent)+'</td><td>'+esc(document.getElementById('ton'+i).textContent)+'</td><td>'+esc(document.getElementById('pct'+i).textContent)+'</td><td>'+esc(statusText)+'</td></tr>'}).join('');
+ const totals=[['Fuel oil','fo'],['Fresh water','fw'],['Other liquids','other'],['Total liquid','total'],['Fuel oil tonnes','fot']].map(([label,id])=>'<div><small>'+label+'</small><b>'+esc(document.getElementById(id).textContent)+'</b></div>').join('');
+ const warnings=missing||invalid?'<div class="reportWarning"><b>INCOMPLETE REPORT — partial totals</b><br>'+missing+' tank(s) without readings; '+invalid+' tank(s) with calculation errors. Totals include only readings accepted by the calculator. Resolve flagged rows before submitting a final ROB.</div>':'<div class="reportWarning"><b>All non-void tanks have valid entries.</b> Review readings and vessel calibration before submitting.</div>';
+ const density=useBDN?'BDN density: '+(val('bdnDensity')||'NOT ENTERED')+' kg/m³ at 15°C':'Source calibration tonnes (BDN override off)';
+ const trim=d.trim?'<h3>Trim correction</h3><div class="reportNotes">Observed trim: '+esc(val('trim'))+' m (negative forward, positive stern). Tank-specific corrections are applied to the observed soundings below.</div><div class="reportScroll"><table><thead><tr><th>Tank</th><th>Correction (m)</th><th>Corrected sounding (m)</th></tr></thead><tbody>'+displayTankEntries(d).map(({t,i})=>'<tr><td>'+esc(t.name)+'</td><td>'+esc(document.getElementById('c'+i).textContent)+'</td><td>'+esc(document.getElementById('z'+i).textContent)+'</td></tr>').join('')+'</tbody></table></div>':'';
+ document.getElementById('reportPaper').innerHTML='<div class="reportBrand">GOF · FLEET OPERATIONS</div><h2>Daily ROB Report</h2><div class="reportSubtitle">'+esc(vesselEl.value)+' · Remaining on board</div><div class="reportMeta">'+cell('Vessel',vesselEl.value)+cell('Reading date & time (local)',val('dt').replace('T',' '))+cell('Report / reference',val('ref'))+cell('Prepared by / Chief Engineer',val('preparedBy'))+'</div>'+warnings+'<div class="reportTotals">'+totals+'</div><h3>Tank readings · observed sounding in '+esc(unit)+'</h3><div class="reportScroll"><table><thead><tr><th>Tank / fluid</th><th>Sounding ('+esc(unit)+')</th><th>Volume (m³)</th><th>Tonnes</th><th>Full</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+trim+'<h3>Fuel density basis</h3><div class="reportNotes">'+esc(density)+'<br>BDN reference: '+esc(val('bdnRef')||'Not entered')+' · BDN date: '+esc(val('bdnDate')||'Not entered')+'</div><h3>Remarks</h3><div class="reportNotes">'+esc(val('remarks')||'None entered')+'</div><div class="reportFooter">Source: '+esc(d.source)+'<br>Blank readings are not zero. Void/reference tanks are excluded from totals. Prepared-by text is not a digital signature.<br>GOF Sounding Calculator v8.4.2 · Generated '+esc(new Date().toLocaleString())+'</div>';
+ }
+ function openROBReport(){returnFocus=document.activeElement;buildReport();report.classList.add('open');document.querySelector('.wrap').inert=true;document.querySelector('.mobileDock').inert=true;document.body.style.overflow='hidden';document.getElementById('closeReport').focus();}
+ function close(){report.classList.remove('open');document.querySelector('.wrap').inert=false;document.querySelector('.mobileDock').inert=false;document.body.style.overflow='';returnFocus?.focus();}
+ document.getElementById('closeReport').onclick=close;document.getElementById('printReport').onclick=()=>window.print();report.addEventListener('keydown',e=>{if(e.key==='Escape')close();if(e.key==='Tab'){const first=document.getElementById('closeReport'),last=document.getElementById('printReport');if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}});window.addEventListener('beforeprint',buildReport);
+ const baseReading=reading;reading=function(){return {...baseReading(),preparedBy:val('preparedBy')}};const baseLoad=loadReading;loadReading=function(index){baseLoad(index);const rec=JSON.parse(localStorage.getItem(key())||'[]')[index];if(rec)document.getElementById('preparedBy').value=rec.preparedBy||'';};vesselEl.addEventListener('change',()=>document.getElementById('preparedBy').value='');
+})();
+</script></body>
+</html>
