@@ -3,13 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GOF Fleet Tank Sounding Calculator v8.4.2</title>
+<title>GOF Fleet Tank Sounding Calculator v8.4.3</title>
 <meta name="theme-color" content="#0b5cab">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="GOF Sounding">
+<meta name="apple-mobile-web-app-title" content="Tank Sounding">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
 <style>
 :root{--bg:#f4f7fa;--card:#fff;--ink:#16202a;--muted:#64707c;--line:#d8e0e7;--accent:#0b5cab;--ok:#177245;--warn:#a65d00;--bad:#a51d2d}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px Arial,sans-serif;color:var(--ink)}
@@ -122,7 +124,7 @@ th:first-child,td:first-child{text-align:left}td input{width:95px;text-align:rig
 <div class="wrap">
   <div class="card">
     <div class="head">
-      <h1>GOF Fleet Tank Sounding Calculator v8.4.2</h1>
+      <h1>GOF Fleet Tank Sounding Calculator v8.4.3</h1>
       <div class="sub">Single offline calculator for the six GOF fleet vessels. Vessel-specific calibration data are embedded in this file. Source SG is shown for reference. Fuel-oil tonnes can optionally use the current BDN density at 15°C.</div>
       <div class="meta">
         <div><label>Vessel</label><select id="vessel"></select></div>
@@ -559,7 +561,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
  const warnings=missing||invalid?'<div class="reportWarning"><b>INCOMPLETE REPORT — partial totals</b><br>'+missing+' tank(s) without readings; '+invalid+' tank(s) with calculation errors. Totals include only readings accepted by the calculator. Resolve flagged rows before submitting a final ROB.</div>':'<div class="reportWarning"><b>All non-void tanks have valid entries.</b> Review readings and vessel calibration before submitting.</div>';
  const density=useBDN?'BDN density: '+(val('bdnDensity')||'NOT ENTERED')+' kg/m³ at 15°C':'Source calibration tonnes (BDN override off)';
  const trim=d.trim?'<h3>Trim correction</h3><div class="reportNotes">Observed trim: '+esc(val('trim'))+' m (negative forward, positive stern). Tank-specific corrections are applied to the observed soundings below.</div><div class="reportScroll"><table><thead><tr><th>Tank</th><th>Correction (m)</th><th>Corrected sounding (m)</th></tr></thead><tbody>'+displayTankEntries(d).map(({t,i})=>'<tr><td>'+esc(t.name)+'</td><td>'+esc(document.getElementById('c'+i).textContent)+'</td><td>'+esc(document.getElementById('z'+i).textContent)+'</td></tr>').join('')+'</tbody></table></div>':'';
- document.getElementById('reportPaper').innerHTML='<div class="reportBrand">GOF · FLEET OPERATIONS</div><h2>Daily ROB Report</h2><div class="reportSubtitle">'+esc(vesselEl.value)+' · Remaining on board</div><div class="reportMeta">'+cell('Vessel',vesselEl.value)+cell('Reading date & time (local)',val('dt').replace('T',' '))+cell('Report / reference',val('ref'))+cell('Prepared by / Chief Engineer',val('preparedBy'))+'</div>'+warnings+'<div class="reportTotals">'+totals+'</div><h3>Tank readings · observed sounding in '+esc(unit)+'</h3><div class="reportScroll"><table><thead><tr><th>Tank / fluid</th><th>Sounding ('+esc(unit)+')</th><th>Volume (m³)</th><th>Tonnes</th><th>Full</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+trim+'<h3>Fuel density basis</h3><div class="reportNotes">'+esc(density)+'<br>BDN reference: '+esc(val('bdnRef')||'Not entered')+' · BDN date: '+esc(val('bdnDate')||'Not entered')+'</div><h3>Remarks</h3><div class="reportNotes">'+esc(val('remarks')||'None entered')+'</div><div class="reportFooter">Source: '+esc(d.source)+'<br>Blank readings are not zero. Void/reference tanks are excluded from totals. Prepared-by text is not a digital signature.<br>GOF Sounding Calculator v8.4.2 · Generated '+esc(new Date().toLocaleString())+'</div>';
+ document.getElementById('reportPaper').innerHTML='<div class="reportBrand">GOF · FLEET OPERATIONS</div><h2>Daily ROB Report</h2><div class="reportSubtitle">'+esc(vesselEl.value)+' · Remaining on board</div><div class="reportMeta">'+cell('Vessel',vesselEl.value)+cell('Reading date & time (local)',val('dt').replace('T',' '))+cell('Report / reference',val('ref'))+cell('Prepared by / Chief Engineer',val('preparedBy'))+'</div>'+warnings+'<div class="reportTotals">'+totals+'</div><h3>Tank readings · observed sounding in '+esc(unit)+'</h3><div class="reportScroll"><table><thead><tr><th>Tank / fluid</th><th>Sounding ('+esc(unit)+')</th><th>Volume (m³)</th><th>Tonnes</th><th>Full</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+trim+'<h3>Fuel density basis</h3><div class="reportNotes">'+esc(density)+'<br>BDN reference: '+esc(val('bdnRef')||'Not entered')+' · BDN date: '+esc(val('bdnDate')||'Not entered')+'</div><h3>Remarks</h3><div class="reportNotes">'+esc(val('remarks')||'None entered')+'</div><div class="reportFooter">Source: '+esc(d.source)+'<br>Blank readings are not zero. Void/reference tanks are excluded from totals. Prepared-by text is not a digital signature.<br>Generated using GOF Fleet Tank Sounding Calculator<br>© 2026 Mohamad Razri Abdul Razak. All rights reserved.<br>Operational aid only. Verify against approved vessel sounding/calibration documents where required.<br>GOF Sounding Calculator v8.4.3 · Generated '+esc(new Date().toLocaleString())+'</div>';
  }
  function openROBReport(){returnFocus=document.activeElement;buildReport();report.classList.add('open');document.querySelector('.wrap').inert=true;document.querySelector('.mobileDock').inert=true;document.body.style.overflow='hidden';document.getElementById('closeReport').focus();}
  function close(){report.classList.remove('open');document.querySelector('.wrap').inert=false;document.querySelector('.mobileDock').inert=false;document.body.style.overflow='';returnFocus?.focus();}

@@ -1,4 +1,4 @@
-GOF Fleet Tank Sounding Calculator v8.4.0
+GOF Fleet Tank Sounding Calculator v8.4.3
 
 GitHub Pages / Android / iPhone installable web app (PWA).
 
@@ -7,7 +7,9 @@ Files:
 - manifest.webmanifest — PWA installation settings
 - sw.js — offline service worker/cache
 - icon-192.png — app icon
-- icon-512.png — app icon
+- icon-512.png - app icon
+- apple-touch-icon.png - iPhone Home Screen icon
+- favicon-32x32.png / favicon-16x16.png - browser tab icons
 
 Deployment:
 1. Upload ALL files to the GitHub repository root.
